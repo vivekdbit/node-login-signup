@@ -6,20 +6,24 @@ app.listen(8080);
 app.use(express.json());
 console.log("server started!...");
 
-app.set('secretKey', 'nodeRestApi'); // jwt secret token
+// jwt secret token
+app.set('secretKey', 'nodeRestApi'); 
+
+// Bcrypt SaltRound
+app.set('saltRounds', 10);
 
 // Token Verification code
 app.all("/api/*", (req,res,next) => {
     try{
         const token = req.header("token");
         if(!token){
-            res.status(403).send();
+            res.status(403).send('Token not present');
         } else {
             jwt.verify(token,req.app.get('secretKey'), (err,decoded) => {
                 if(!err){
                     next();
                 } else {
-                    res.status(500).send();
+                    res.status(500).send('Invalid Token');
                 }
             })
         }
@@ -28,15 +32,14 @@ app.all("/api/*", (req,res,next) => {
     }
 })
 
-app.get("/token", (req,res) => {
-    const token = jwt.sign({"test":"test"}, 
-                           req.app.get('secretKey'),
-                           { expiresIn: '1h' });
-    res.send({"token":token});
-})
+const DataRouter = require('./api/api-user-login');
+app.use('/auth',new DataRouter().dataRouter);
 
-const DataRouter = require('./api-user-login');
-app.use('/employee',new DataRouter().dataRouter);
+const UserRouter = require('./api/api-user');
+app.use('/api/v1/user', new UserRouter().userRouter);
+
+const DataIngestionRouter = require('./api/api-data-ingestion');
+app.use('/api/v1/ingest', new DataIngestionRouter().dataIngestionRouter);
 
 
 

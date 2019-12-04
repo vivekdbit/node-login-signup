@@ -1,21 +1,22 @@
 const express = require("express");
 const expressRouter = express.Router();
-const Database = require("./database-async-await");
+const Database = require("../models/database-async-await");
 const ObjectID = require("mongodb").ObjectID;
-
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
-const saltRounds = 10;
 
 // Validations Middleware
-const v = require('./middleware/validations');
+const {ValidationLogin,validationErrorHandler} = require("../middleware")
 
 class DataRouter{
     dataRouter 
     constructor(){
         this.dataRouter = expressRouter;
 
-        this.dataRouter.get("/login", v.validation.loginValidator, async (req,res) => {    
+        this.dataRouter.get("/login", 
+        ValidationLogin.loginValidator(), 
+        validationErrorHandler.handleErrors, 
+        async (req,res) => {    
             const readParams = {
                 collection      : "users",
                 criteria        : { "email" : req.body.email},
@@ -53,10 +54,14 @@ class DataRouter{
             }
         })
 
-        this.dataRouter.post("/signup", v.validation.signupValidator, async (req, res) => {
+        this.dataRouter.post("/signup", 
+        ValidationLogin.signupValidator(), 
+        validationErrorHandler.handleErrors, 
+        async (req, res) => {
 
             let dat = req.body;
-            dat.password = bcrypt.hashSync(dat.password, saltRounds);
+            dat.password = bcrypt.hashSync(dat.password, app.get('saltRounds'));
+            dat.created_at = new Date();
 
             const writeParams = {
                 collection      : "users",

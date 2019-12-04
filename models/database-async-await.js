@@ -64,7 +64,7 @@ class DatabaseAsyncAwait {
             const conn = await this.client.connect();
             const db = conn.db(this.db);
             const collection = db.collection(updateParams.collection);
-            const docs = await collection.updateOne(updateParams.criteria,updateParams.projection);
+            const docs = await collection.updateOne(updateParams.criteria, updateParams.data, updateParams.projection);
             return docs;
         } catch (e){
             throw(e);
